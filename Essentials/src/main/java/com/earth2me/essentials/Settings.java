@@ -2096,13 +2096,19 @@ public class Settings implements net.ess3.api.ISettings {
     @Override
     public BigDecimal getMultiplier(final User user) {
         BigDecimal multiplier = defaultMultiplier;
-        if (multiplierPerms == null) return defaultMultiplier;
-        for (String multiplierPerm : multiplierPerms) {
+        if (multiplierPerms == null) {
+            return defaultMultiplier;
+        }
+
+        for (final String multiplierPerm : multiplierPerms) {
             if (user.isAuthorized("essentials.sell.multiplier." + multiplierPerm)) {
-                BigDecimal value = config.getBigDecimal("sell-multipliers." + multiplierPerm, BigDecimal.ZERO);
-                if (value.compareTo(multiplier) > 0) multiplier = value;
+                final BigDecimal value = config.getBigDecimal("sell-multipliers." + multiplierPerm, BigDecimal.ZERO);
+                if (value.compareTo(multiplier) > 0) {
+                    multiplier = value;
+                }
             }
         }
+
         return multiplier;
     }
 
