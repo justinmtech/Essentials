@@ -5,6 +5,7 @@ import com.earth2me.essentials.Essentials;
 import com.earth2me.essentials.Trade;
 import com.earth2me.essentials.User;
 import com.earth2me.essentials.chat.EssentialsChat;
+import com.earth2me.essentials.utils.AdventureUtil;
 import com.earth2me.essentials.utils.FormatUtil;
 import net.ess3.api.events.LocalChatSpyEvent;
 import net.essentialsx.api.v2.ChatType;
@@ -26,7 +27,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.logging.Level;
 
-import static com.earth2me.essentials.I18n.tl;
+import static com.earth2me.essentials.I18n.tlLiteral;
 
 public abstract class AbstractChatHandler {
 
@@ -75,7 +76,7 @@ public abstract class AbstractChatHandler {
         // This listener should apply the general chat formatting only...then return control back the event handler
         event.setMessage(FormatUtil.formatMessage(user, "essentials.chat", event.getMessage()));
 
-        if (ChatColor.stripColor(event.getMessage()).length() == 0) {
+        if (ChatColor.stripColor(event.getMessage()).isEmpty()) {
             event.setCancelled(true);
             return;
         }
@@ -90,7 +91,8 @@ public abstract class AbstractChatHandler {
         final String suffix = FormatUtil.replaceFormat(ess.getPermissionsHandler().getSuffix(player));
         final Team team = player.getScoreboard().getPlayerTeam(player);
 
-        String format = ess.getSettings().getChatFormat(group);
+        final ChatType chatType = chat.getType();
+        String format = ess.getSettings().getChatFormat(group, chat.getRadius() > 0 && chatType == ChatType.UNKNOWN ? ChatType.LOCAL : chatType);
         format = format.replace("{0}", group);
         format = format.replace("{1}", ess.getSettings().getWorldAlias(world));
         format = format.replace("{2}", world.substring(0, 1).toUpperCase(Locale.ENGLISH));
@@ -103,15 +105,15 @@ public abstract class AbstractChatHandler {
         format = format.replace("{9}", nickname == null ? username : nickname);
 
         // Local, shout and question chat types are only enabled when there's a valid radius
-        if (chat.getRadius() > 0 && event.getMessage().length() > 0) {
+        if (chat.getRadius() > 0 && !event.getMessage().isEmpty()) {
             if (event.getMessage().length() > 1 && ((chat.getType() == ChatType.SHOUT && event.getMessage().charAt(0) == ess.getSettings().getChatShout()) || (chat.getType() == ChatType.QUESTION && event.getMessage().charAt(0) == ess.getSettings().getChatQuestion()))) {
                 event.setMessage(event.getMessage().substring(1));
             }
 
             if (chat.getType() == ChatType.UNKNOWN) {
-                format = tl("chatTypeLocal").concat(format);
+                format = AdventureUtil.miniToLegacy(tlLiteral("chatTypeLocal")).concat(format);
             } else {
-                format = tl(chat.getType().key() + "Format", format);
+                format = AdventureUtil.miniToLegacy(tlLiteral(chat.getType().key() + "Format", format));
             }
         }
 
@@ -141,10 +143,10 @@ public abstract class AbstractChatHandler {
 
         final User user = chat.getUser();
 
-        if (event.getMessage().length() > 0) {
+        if (!event.getMessage().isEmpty()) {
             if (chat.getType() == ChatType.UNKNOWN) {
                 if (!user.isAuthorized("essentials.chat.local")) {
-                    user.sendMessage(tl("notAllowedToLocal"));
+                    user.sendTl("notAllowedToLocal");
                     event.setCancelled(true);
                     return;
                 }
@@ -159,10 +161,9 @@ public abstract class AbstractChatHandler {
                     callChatEvent(event, chat.getType(), null);
                 } else {
                     final String chatType = chat.getType().name();
-                    user.sendMessage(tl("notAllowedTo" + chatType.charAt(0) + chatType.substring(1).toLowerCase(Locale.ENGLISH)));
+                    user.sendTl("notAllowedTo" + chatType.charAt(0) + chatType.substring(1).toLowerCase(Locale.ENGLISH));
                     event.setCancelled(true);
                 }
-
                 return;
             }
         }
@@ -213,12 +214,12 @@ public abstract class AbstractChatHandler {
         }
 
         if (outList.size() < 2) {
-            user.sendMessage(tl("localNoOne"));
+            user.sendTl("localNoOne");
         }
 
         // Strip local chat prefix to preserve API behaviour
-        final String localPrefix = tl("chatTypeLocal");
-        String baseFormat = event.getFormat();
+        final String localPrefix = AdventureUtil.miniToLegacy(tlLiteral("chatTypeLocal"));
+        String baseFormat = AdventureUtil.legacyToMini(event.getFormat());
         if (event.getFormat().startsWith(localPrefix)) {
             baseFormat = baseFormat.substring(localPrefix.length());
         }
@@ -227,8 +228,10 @@ public abstract class AbstractChatHandler {
         server.getPluginManager().callEvent(spyEvent);
 
         if (!spyEvent.isCancelled()) {
+            final String legacyString = AdventureUtil.miniToLegacy(String.format(spyEvent.getFormat(), AdventureUtil.legacyToMini(user.getDisplayName()), AdventureUtil.escapeTags(spyEvent.getMessage())));
+
             for (final Player onlinePlayer : spyEvent.getRecipients()) {
-                onlinePlayer.sendMessage(String.format(spyEvent.getFormat(), user.getDisplayName(), spyEvent.getMessage()));
+                onlinePlayer.sendMessage(legacyString);
             }
         }
     }
@@ -286,7 +289,7 @@ public abstract class AbstractChatHandler {
     }
 
     ChatType getChatType(final User user, final String message) {
-        if (message.length() == 0) {
+        if (message.isEmpty()) {
             //Ignore empty chat events generated by plugins
             return ChatType.UNKNOWN;
         }

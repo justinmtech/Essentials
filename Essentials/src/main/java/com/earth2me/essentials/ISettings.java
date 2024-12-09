@@ -3,6 +3,8 @@ package com.earth2me.essentials;
 import com.earth2me.essentials.commands.IEssentialsCommand;
 import com.earth2me.essentials.signs.EssentialsSign;
 import com.earth2me.essentials.textreader.IText;
+import net.essentialsx.api.v2.ChatType;
+import net.kyori.adventure.text.minimessage.tag.Tag;
 import org.bukkit.Material;
 import org.bukkit.event.EventPriority;
 import org.spongepowered.configurate.CommentedConfigurationNode;
@@ -35,6 +37,8 @@ public interface ISettings extends IConf {
     boolean isAlwaysRunBackup();
 
     String getChatFormat(String group);
+
+    String getChatFormat(String group, ChatType chatType);
 
     String getWorldAlias(String world);
 
@@ -72,6 +76,8 @@ public interface ISettings extends IConf {
 
     boolean isSocialSpyMessages();
 
+    boolean isSocialSpyDisplayNames();
+
     Set<String> getMuteCommands();
 
     @Deprecated
@@ -80,6 +86,8 @@ public interface ISettings extends IConf {
     boolean isSkippingUsedOneTimeKitsFromKitList();
 
     String getLocale();
+
+    boolean isPerPlayerLocale();
 
     String getNewbieSpawn();
 
@@ -100,6 +108,10 @@ public interface ISettings extends IConf {
     String getProtectString(final String configName);
 
     boolean getRespawnAtHome();
+
+    String getRandomSpawnLocation();
+
+    String getRandomRespawnLocation();
 
     boolean isRespawnAtAnchor();
 
@@ -409,6 +421,14 @@ public interface ISettings extends IConf {
     BigDecimal getMultiplier(final User user);
 
     int getMaxItemLore();
+
+    Tag getPrimaryColor();
+
+    Tag getSecondaryColor();
+
+    BigDecimal getBaltopMinBalance();
+
+    long getBaltopMinPlaytime();
 
     enum KeepInvPolicy {
         KEEP,
